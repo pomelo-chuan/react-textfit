@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import shallowEqual from './utils/shallowEqual';
+import isEqual from 'lodash/isEqual';
+import throttle from 'lodash/throttle';
+import uniqueId from 'lodash/uniqueId';
 import series from './utils/series';
 import whilst from './utils/whilst';
-import throttle from './utils/throttle';
-import uniqueId from './utils/uniqueId';
 import { innerWidth, innerHeight } from './utils/innerSize';
 
 function assertElementFitsWidth(el, width) {
@@ -68,7 +68,7 @@ export default class TextFit extends React.Component {
     componentDidUpdate(prevProps) {
         const { ready } = this.state;
         if (!ready) return;
-        if (shallowEqual(this.props, prevProps)) return;
+        if (isEqual(this.props, prevProps)) return;
         this.process();
     }
 
