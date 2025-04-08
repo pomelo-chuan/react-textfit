@@ -1,63 +1,73 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import isEqual from 'lodash/isEqual';
 import throttle from 'lodash/throttle';
 import uniqueId from 'lodash/uniqueId';
+import isEqual from 'lodash/isEqual';
 import series from './utils/series';
 import whilst from './utils/whilst';
 import { innerWidth, innerHeight } from './utils/innerSize';
 
-function assertElementFitsWidth(el, width) {
+interface TextFitProps {
+    children?: React.ReactNode | ((text: string) => React.ReactNode);
+    text?: string;
+    min?: number;
+    max?: number;
+    mode?: 'single' | 'multi';
+    forceSingleModeWidth?: boolean;
+    throttle?: number;
+    autoResize?: boolean;
+    onReady?: (fontSize: number) => void;
+    style?: React.CSSProperties;
+    [key: string]: any;
+}
+
+interface TextFitState {
+    fontSize: number | undefined;
+    ready: boolean;
+}
+
+function assertElementFitsWidth(el: HTMLElement, width: number): boolean {
     // -1: temporary bugfix, will be refactored soon
     return el.scrollWidth - 1 <= width;
 }
 
-function assertElementFitsHeight(el, height) {
+function assertElementFitsHeight(el: HTMLElement, height: number): boolean {
     // -1: temporary bugfix, will be refactored soon
     return el.scrollHeight - 1 <= height;
 }
 
-function noop() {}
+function noop(): void {}
 
-export default class TextFit extends React.Component {
-    static propTypes = {
-        children: PropTypes.node,
-        text: PropTypes.string,
-        min: PropTypes.number,
-        max: PropTypes.number,
-        mode: PropTypes.oneOf([
-            'single', 'multi'
-        ]),
-        forceSingleModeWidth: PropTypes.bool,
-        throttle: PropTypes.number,
-        onReady: PropTypes.func
-    }
-
+export default class TextFit extends React.Component<TextFitProps, TextFitState> {
     static defaultProps = {
         min: 1,
         max: 100,
-        mode: 'multi',
+        mode: 'multi' as const,
         forceSingleModeWidth: true,
         throttle: 50,
         autoResize: true,
         onReady: noop
-    }
+    };
 
-    constructor(props) {
+    private _parent: HTMLDivElement | null = null;
+    private _child: HTMLDivElement | null = null;
+    private pid: string = '';
+    private readonly handleWindowResize: () => void;
+
+    constructor(props: TextFitProps) {
         super(props);
         if ('perfectFit' in props) {
             console.warn('TextFit property perfectFit has been removed.');
         }
 
-        this.handleWindowResize = throttle(this.handleWindowResize, props.throttle);
+        this.state = {
+            fontSize: undefined,
+            ready: false
+        };
+
+        this.handleWindowResize = throttle(this.process.bind(this), props.throttle);
     }
 
-    state = {
-        fontSize: null,
-        ready: false
-    }
-
-    componentDidMount() {
+    componentDidMount(): void {
         const { autoResize } = this.props;
         if (autoResize) {
             window.addEventListener('resize', this.handleWindowResize);
@@ -65,14 +75,14 @@ export default class TextFit extends React.Component {
         this.process();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: TextFitProps): void {
         const { ready } = this.state;
         if (!ready) return;
         if (isEqual(this.props, prevProps)) return;
         this.process();
     }
 
-    componentWillUnmount() {
+    componentWillUnmount(): void {
         const { autoResize } = this.props;
         if (autoResize) {
             window.removeEventListener('resize', this.handleWindowResize);
@@ -81,12 +91,11 @@ export default class TextFit extends React.Component {
         this.pid = uniqueId();
     }
 
-    handleWindowResize = () => {
-        this.process();
-    }
-
-    process() {
+    process = (): void => {
         const { min, max, mode, forceSingleModeWidth, onReady } = this.props;
+        
+        if (!this._parent || !this._child) return;
+        
         const el = this._parent;
         const wrapper = this._child;
 
@@ -106,7 +115,7 @@ export default class TextFit extends React.Component {
         const pid = uniqueId();
         this.pid = pid;
 
-        const shouldCancelProcess = () => pid !== this.pid;
+        const shouldCancelProcess = (): boolean => pid !== this.pid;
 
         const testPrimary = mode === 'multi'
             ? () => assertElementFitsHeight(wrapper, originalHeight)
@@ -116,11 +125,11 @@ export default class TextFit extends React.Component {
             ? () => assertElementFitsWidth(wrapper, originalWidth)
             : () => assertElementFitsHeight(wrapper, originalHeight);
 
-        let mid;
-        let low = min;
-        let high = max;
+        let mid: number;
+        let low = min || 1;
+        let high = max || 100;
 
-        this.setState({ ready: false});
+        this.setState({ ready: false });
 
         series([
             // Step 1:
@@ -129,7 +138,7 @@ export default class TextFit extends React.Component {
                 () => low <= high,
                 whilstCallback => {
                     if (shouldCancelProcess()) return whilstCallback(true);
-                    mid = parseInt((low + high) / 2, 10);
+                    mid = parseInt(((low + high) / 2).toString(), 10);
                     this.setState({ fontSize: mid }, () => {
                         if (shouldCancelProcess()) return whilstCallback(true);
                         if (testPrimary()) low = mid + 1;
@@ -142,17 +151,16 @@ export default class TextFit extends React.Component {
             // Step 2:
             // Binary search to fit the element's width (multi line) / height (single line)
             // If mode is single and forceSingleModeWidth is true, skip this step
-            // in order to not fit the elements height and decrease the width
             stepCallback => {
-                if (mode === 'single' && forceSingleModeWidth) return stepCallback();
-                if (testSecondary()) return stepCallback();
-                low = min;
-                high = mid;
+                if (mode === 'single' && forceSingleModeWidth) return stepCallback(null);
+                if (testSecondary()) return stepCallback(null);
+                low = min || 1;
+                high = mid!;
                 return whilst(
                     () => low < high,
                     whilstCallback => {
                         if (shouldCancelProcess()) return whilstCallback(true);
-                        mid = parseInt((low + high) / 2, 10);
+                        mid = parseInt(((low + high) / 2).toString(), 10);
                         this.setState({ fontSize: mid }, () => {
                             if (pid !== this.pid) return whilstCallback(true);
                             if (testSecondary()) low = mid + 1;
@@ -171,23 +179,23 @@ export default class TextFit extends React.Component {
                 mid = Math.min(low, high);
 
                 // Ensure we hit the user-supplied limits
-                mid = Math.max(mid, min);
-                mid = Math.min(mid, max);
+                mid = Math.max(mid, min || 1);
+                mid = Math.min(mid, max || 100);
 
                 // Sanity check:
                 mid = Math.max(mid, 0);
 
                 if (shouldCancelProcess()) return stepCallback(true);
-                this.setState({ fontSize: mid }, stepCallback);
+                this.setState({ fontSize: mid }, () => stepCallback(null));
             }
-        ], err => {
+        ], (err?: boolean) => {
             // err will be true, if another process was triggered
             if (err || shouldCancelProcess()) return;
-            this.setState({ ready: true }, () => onReady(mid));
+            this.setState({ ready: true }, () => onReady?.(mid!));
         });
-    }
+    };
 
-    render() {
+    render(): React.ReactNode {
         const {
             children,
             text,
@@ -195,25 +203,27 @@ export default class TextFit extends React.Component {
             min,
             max,
             mode,
-            forceWidth,
             forceSingleModeWidth,
-            /* eslint-disable no-shadow */
-            throttle,
-            /* eslint-enable no-shadow */
+            throttle: _throttle,
             autoResize,
             onReady,
             ...props
         } = this.props;
+        
         const { fontSize, ready } = this.state;
-        const finalStyle = {
+        
+        const finalStyle: React.CSSProperties = {
             ...style,
             fontSize: fontSize
         };
 
-        const wrapperStyle = {
+        const wrapperStyle: React.CSSProperties = {
             display: ready ? 'block' : 'inline-block'
         };
-        if (mode === 'single') wrapperStyle.whiteSpace = 'nowrap';
+        
+        if (mode === 'single') {
+            wrapperStyle.whiteSpace = 'nowrap';
+        }
 
         return (
             <div ref={c => this._parent = c} style={finalStyle} {...props}>
@@ -228,4 +238,4 @@ export default class TextFit extends React.Component {
             </div>
         );
     }
-}
+} 

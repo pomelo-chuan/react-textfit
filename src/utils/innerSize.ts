@@ -1,5 +1,5 @@
 // Calculate height without padding.
-export function innerHeight(el) {
+export function innerHeight(el: HTMLElement): number {
   const style = window.getComputedStyle(el, null);
   // Hidden iframe in Firefox returns null, https://github.com/malte-wessel/react-textfit/pull/34
   if (!style) return el.clientHeight;
@@ -11,7 +11,7 @@ export function innerHeight(el) {
 }
 
 // Calculate width without padding.
-export function innerWidth(el) {
+export function innerWidth(el: HTMLElement): number {
   const style = window.getComputedStyle(el, null);
   // Hidden iframe in Firefox returns null, https://github.com/malte-wessel/react-textfit/pull/34
   if (!style) return el.clientWidth;
@@ -20,4 +20,4 @@ export function innerWidth(el) {
     parseInt(style.getPropertyValue("padding-left"), 10) -
     parseInt(style.getPropertyValue("padding-right"), 10)
   );
-}
+} 

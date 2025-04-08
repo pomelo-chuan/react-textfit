@@ -1,45 +1,43 @@
-import babel from '@rollup/plugin-babel';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import terser from '@rollup/plugin-terser';
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+const babel = require('@rollup/plugin-babel').default;
+const resolve = require('@rollup/plugin-node-resolve').default;
+const commonjs = require('@rollup/plugin-commonjs').default;
+const typescript = require('@rollup/plugin-typescript').default;
+const terser = require('@rollup/plugin-terser').default;
+const peerDepsExternal = require('rollup-plugin-peer-deps-external');
 
-const extensions = ['.js', '.jsx'];
+const extensions = ['.js', '.jsx', '.ts', '.tsx'];
 
-export default {
-  input: 'src/index.js',
+module.exports = {
+  input: 'src/index.ts',
   output: [
     {
-      file: 'lib/index.js',
+      file: 'dist/index.js',
       format: 'cjs',
       sourcemap: true,
+      exports: 'named'
     },
     {
-      file: 'lib/index.esm.js',
-      format: 'esm',
+      file: 'dist/index.esm.js',
+      format: 'es',
       sourcemap: true,
+      exports: 'named'
     },
   ],
   plugins: [
     peerDepsExternal(),
-    resolve({ 
-      extensions,
-      moduleDirectories: ['node_modules']
-    }),
-    commonjs({
-      include: /node_modules/,
-      transformMixedEsModules: true
+    resolve({ extensions }),
+    commonjs(),
+    typescript({
+      tsconfig: './tsconfig.json',
+      declaration: true,
+      declarationDir: 'dist',
     }),
     babel({
       extensions,
       babelHelpers: 'bundled',
       include: ['src/**/*'],
-      presets: [
-        '@babel/preset-env',
-        ['@babel/preset-react', { runtime: 'automatic' }]
-      ]
     }),
     terser(),
   ],
-  external: ['react', 'react-dom', 'prop-types', /^lodash\/.*/],
+  external: ['react', 'react-dom', 'lodash'],
 }; 
