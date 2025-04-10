@@ -6,17 +6,78 @@ import series from './utils/series';
 import whilst from './utils/whilst';
 import { innerWidth, innerHeight } from './utils/innerSize';
 
+/**
+ * Props for the TextFit component
+ */
 interface TextFitProps {
+    /** 
+     * The content to be rendered inside the TextFit component.
+     * Can be either React nodes or a render function that receives the text as an argument.
+     */
     children?: React.ReactNode | ((text: string) => React.ReactNode);
+
+    /**
+     * Optional text to be used when children is a render function.
+     * This text will be passed to the render function once the component is ready.
+     */
     text?: string;
+
+    /**
+     * Minimum font size in pixels.
+     * @default 1
+     */
     min?: number;
+
+    /**
+     * Maximum font size in pixels.
+     * @default 100
+     */
     max?: number;
+
+    /**
+     * Algorithm mode to fit the text.
+     * - 'single': Use for headlines (single line)
+     * - 'multi': Use for paragraphs (multiple lines)
+     * @default 'multi'
+     */
     mode?: 'single' | 'multi';
+
+    /**
+     * When mode is 'single' and this is true, the element's height will be ignored.
+     * Set to false to respect both width and height in single line mode.
+     * @default true
+     */
     forceSingleModeWidth?: boolean;
+
+    /**
+     * Window resize throttle in milliseconds.
+     * Controls how often the component recalculates on window resize.
+     * @default 50
+     */
     throttle?: number;
+
+    /**
+     * Whether to automatically resize when window size changes.
+     * @default true
+     */
     autoResize?: boolean;
+
+    /**
+     * Callback function that will be called when text fitting is complete.
+     * Receives the final calculated font size as an argument.
+     * @param fontSize The final calculated font size in pixels
+     * @default noop
+     */
     onReady?: (fontSize: number) => void;
+
+    /**
+     * Additional style properties to apply to the container element.
+     */
     style?: React.CSSProperties;
+
+    /**
+     * Any additional props will be passed to the container div element.
+     */
     [key: string]: any;
 }
 

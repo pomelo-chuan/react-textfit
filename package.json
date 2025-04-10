@@ -1,7 +1,7 @@
 {
-  "name": "react-textfit",
-  "version": "1.1.1",
-  "description": "React component to fit headlines and paragraphs into any element",
+  "name": "@pomelo/react-textfit",
+  "version": "1.0.0",
+  "description": "React component to fit headlines and paragraphs into any element - Fork of react-textfit with improvements",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/malte-wessel/react-textfit.git"
+    "url": "https://github.com/pomelo/react-textfit.git"
   },
   "keywords": [
     "textfit",
@@ -26,12 +26,12 @@
     "react",
     "react-component"
   ],
-  "author": "Malte Wessel",
+  "author": "pomelo",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/malte-wessel/react-textfit/issues"
+    "url": "https://github.com/pomelo/react-textfit/issues"
   },
-  "homepage": "https://github.com/malte-wessel/react-textfit",
+  "homepage": "https://github.com/pomelo/react-textfit",
   "devDependencies": {
     "@babel/core": "^7.24.3",
     "@babel/preset-env": "^7.24.3",
@@ -60,10 +60,5 @@
   },
   "dependencies": {
     "lodash": "^4.17.21"
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
   }
 }

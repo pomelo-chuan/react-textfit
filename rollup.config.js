@@ -2,7 +2,6 @@ const babel = require('@rollup/plugin-babel').default;
 const resolve = require('@rollup/plugin-node-resolve').default;
 const commonjs = require('@rollup/plugin-commonjs').default;
 const typescript = require('@rollup/plugin-typescript').default;
-const terser = require('@rollup/plugin-terser').default;
 const peerDepsExternal = require('rollup-plugin-peer-deps-external');
 
 const extensions = ['.js', '.jsx', '.ts', '.tsx'];
@@ -37,7 +36,6 @@ module.exports = {
       babelHelpers: 'bundled',
       include: ['src/**/*'],
     }),
-    terser(),
   ],
   external: ['react', 'react-dom', 'lodash'],
 }; 
